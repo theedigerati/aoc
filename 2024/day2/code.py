@@ -36,6 +36,7 @@ def validate_report_part(part, state={}, reverse=False):
     return state
 
 
+# this approach did not work either.
 def validate_report_traverse(levels):
     diff_state = None
     valid = False
@@ -56,23 +57,19 @@ def validate_report_traverse(levels):
         elif dampner is not None:
             break
         elif i == 0:
-            dampner = i
+            a = int(levels[i])
+            b = int(levels[i + 2])
+            head_diff_state, head_valid = validate_level(None, a, b)
+            if not head_valid:
+                break
+            a = int(len(levels) - 2)
+            b = int(len(levels) - 1)
+            tail_diff_state, tail_valid = validate_level(None, a, b)
+            if not tail_valid:
+                break
+            dampner = i + 1 if head_diff_state == tail_diff_state else i
+            diff_state = tail_diff_state
             continue
-
-            # a = int(levels[i + 1])
-            # b = int(levels[i + 2])
-            # diff_state, valid = validate_level(None, a, b)
-            # if valid:
-            #     dampner = i
-            #     continue
-            # else:
-            #     a = int(levels[i])
-            #     diff_state, valid = validate_level(None, a, b)
-            #     if valid:
-            #         dampner = i + 1
-            #         continue
-            #     else:
-            #         break
         elif i + 2 == len(levels):  # out of bounds
             dampner = i + 1
             continue
@@ -125,11 +122,9 @@ def validate_level(diff_state: int | None, a: int, b: int):
     diff = abs(a - b)
     if diff < 1 or diff > 3:
         return diff_state, False
-    new_diff_state = -1 if a == b else (1 if a > b else 0)
+    new_diff_state = 1 if a > b else 0
     if diff_state is None:
         return new_diff_state, True
-    elif diff_state == -1:
-        return diff_state, False
     elif diff_state ^ new_diff_state:
         return diff_state, False
     return diff_state, True
