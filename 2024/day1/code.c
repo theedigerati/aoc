@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define LIST_LEN 1000
+
 int compar(const void *elem0, const void *elem1){
     const int *x = elem0, *y = elem1;
 
@@ -11,7 +13,7 @@ int compar(const void *elem0, const void *elem1){
 
 int main(void){
 	FILE *lists;
-	int list1[1000], list2[1000];
+	int list1[LIST_LEN], list2[LIST_LEN];
 	int num1, num2;
 	int lines_count = 0;
 	int total_distance = 0;
@@ -25,12 +27,12 @@ int main(void){
 	}
 	fclose(lists);
 
-	qsort(list1, 1000, sizeof(int), compar);
-	qsort(list2, 1000, sizeof(int), compar);
+	qsort(list1, LIST_LEN, sizeof(int), compar);
+	qsort(list2, LIST_LEN, sizeof(int), compar);
 
-	for (int i = 0; i < 1000; i++){
+	for (int i = 0; i < LIST_LEN; i++){
 		int occurrence = 0;
-		for (int j = 0; j < 1000; j++){
+		for (int j = 0; j < LIST_LEN; j++){
 			if (list1[i] == list2[j]) occurrence++;
 		}
 		total_distance += abs(list1[i] - list2[i]);
