@@ -1,4 +1,4 @@
-# this approach did not work!
+# silly non brute-force, didn't work!
 def validate_report_part(part, state={}, reverse=False):
     if reverse:
         part.reverse()
@@ -36,7 +36,7 @@ def validate_report_part(part, state={}, reverse=False):
     return state
 
 
-# this approach did not work either.
+# another non brute-force, didn't work!
 def validate_report_traverse(levels):
     diff_state = None
     valid = False
@@ -95,17 +95,18 @@ def validate_report_traverse(levels):
 
 
 def validate_report(levels, dampner=None):
-    diff_state = None
+    diff_state = 0
     valid = False
+    len_levels = len(levels)
 
-    for i in range(len(levels)):
-        if i == len(levels) - 1:
+    for i in range(len_levels):
+        if i + 1 == len_levels:
             valid = True
             break
         if dampner == i:
             continue
         j = i + 1
-        if dampner == j and j == len(levels) - 1:
+        if dampner == j and j + 1 == len_levels:
             continue
         elif dampner == j:
             j += 1
@@ -118,12 +119,12 @@ def validate_report(levels, dampner=None):
     return valid
 
 
-def validate_level(diff_state: int | None, a: int, b: int):
+def validate_level(diff_state: int, a: int, b: int):
     diff = abs(a - b)
     if diff < 1 or diff > 3:
         return diff_state, False
-    new_diff_state = 1 if a > b else 0
-    if diff_state is None:
+    new_diff_state = 1 if a > b else -1
+    if diff_state == 0:
         return new_diff_state, True
     elif diff_state ^ new_diff_state:
         return diff_state, False
@@ -131,6 +132,7 @@ def validate_level(diff_state: int | None, a: int, b: int):
 
 
 safe_reports = 0
+safe_reports_with_dampner = 0
 with open("input.txt") as reports:
     for report in reports:
         levels = report.split()
@@ -143,8 +145,9 @@ with open("input.txt") as reports:
         else:
             for dampner in range(len(levels)):
                 if validate_report(levels, dampner):
-                    safe_reports += 1
+                    safe_reports_with_dampner += 1
                     break
 
 
 print("Total safe reports: ", safe_reports)
+print("Total safe reports with dampner: ", safe_reports + safe_reports_with_dampner)
