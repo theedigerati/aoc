@@ -1,46 +1,7 @@
-# silly non brute-force, didn't work!
-def validate_report_part(part, state={}, reverse=False):
-    if reverse:
-        part.reverse()
-    diff_state = state.get("diff_state")
-    diff_state = 1 - diff_state if reverse else diff_state
-    dampner = state.get("dampner")
-    valid = state.get("valid") or False
-
-    for i in range(len(part)):
-        if i == len(part) - 1:
-            valid = True
-            break
-        a = int(part[i])
-        b = int(part[i + 1])
-
-        diff_state, valid = validate_level(diff_state, a, b)
-        if not valid and i == 0:
-            dampner = i
-            continue
-        if not valid and dampner is None:
-            dampner = i
-            a = int(part[i - 1])
-            _, valid = validate_level(diff_state, a, b)
-            if not valid and (i < len(part) - 2):
-                dampner = i + 1
-                a = int(part[i])
-                b = int(part[i + 2])
-                _, valid = validate_level(diff_state, a, b)
-            if not valid and (i == len(part) - 2):
-                continue
-        if not valid:
-            break
-        valid = True
-    state.update({"diff_state": diff_state, "dampner": dampner, "valid": valid})
-    return state
-
-
-# another non brute-force, didn't work!
-def validate_report_traverse(levels):
-    diff_state = None
-    valid = False
+def validate(levels, use_dampner=True):
+    diff_state = 0
     dampner = None
+    valid = False
 
     for i in range(len(levels)):
         if i + 1 == len(levels):
@@ -54,21 +15,12 @@ def validate_report_traverse(levels):
         diff_state, valid = validate_level(diff_state, a, b)
         if valid:
             continue
+        elif use_dampner is False:
+            break
         elif dampner is not None:
             break
         elif i == 0:
-            a = int(levels[i])
-            b = int(levels[i + 2])
-            head_diff_state, head_valid = validate_level(None, a, b)
-            if not head_valid:
-                break
-            a = int(len(levels) - 2)
-            b = int(len(levels) - 1)
-            tail_diff_state, tail_valid = validate_level(None, a, b)
-            if not tail_valid:
-                break
-            dampner = i + 1 if head_diff_state == tail_diff_state else i
-            diff_state = tail_diff_state
+            dampner = i
             continue
         elif i + 2 == len(levels):  # out of bounds
             dampner = i + 1
@@ -94,31 +46,6 @@ def validate_report_traverse(levels):
     return valid
 
 
-def validate_report(levels, dampner=None):
-    diff_state = 0
-    valid = False
-    len_levels = len(levels)
-
-    for i in range(len_levels):
-        if i + 1 == len_levels:
-            valid = True
-            break
-        if dampner == i:
-            continue
-        j = i + 1
-        if dampner == j and j + 1 == len_levels:
-            continue
-        elif dampner == j:
-            j += 1
-        a = int(levels[i])
-        b = int(levels[j])
-
-        diff_state, valid = validate_level(diff_state, a, b)
-        if not valid:
-            break
-    return valid
-
-
 def validate_level(diff_state: int, a: int, b: int):
     diff = abs(a - b)
     if diff < 1 or diff > 3:
@@ -137,17 +64,14 @@ with open("input.txt") as reports:
     for report in reports:
         levels = report.split()
 
-        # if validate_report_traverse(levels):
-        #     safe_reports += 1
-
-        if validate_report(levels):
+        if validate(levels, use_dampner=False):
             safe_reports += 1
+        elif validate(levels):
+            safe_reports_with_dampner += 1
         else:
-            for dampner in range(len(levels)):
-                if validate_report(levels, dampner):
-                    safe_reports_with_dampner += 1
-                    break
-
+            levels.reverse()
+            if validate(levels):
+                safe_reports_with_dampner += 1
 
 print("Total safe reports: ", safe_reports)
 print("Total safe reports with dampner: ", safe_reports + safe_reports_with_dampner)
