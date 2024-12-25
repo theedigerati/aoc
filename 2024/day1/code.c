@@ -20,6 +20,10 @@ int main(void){
 	int similiarity_score = 0;
 
 	lists = fopen("input.txt", "r");
+	if(lists == NULL){
+		printf("cannot open file");
+		return EXIT_FAILURE;
+	}
 	while(fscanf(lists, "%d   %d", &num1, &num2) != EOF){
 		list1[lines_count] = num1;
 		list2[lines_count] = num2;
