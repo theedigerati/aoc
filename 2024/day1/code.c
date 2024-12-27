@@ -21,8 +21,8 @@ int main(void){
 
 	lists = fopen("input.txt", "r");
 	if(lists == NULL){
-		printf("cannot open file");
-		return EXIT_FAILURE;
+		perror("cannot open file");
+		return 1;
 	}
 	while(fscanf(lists, "%d   %d", &num1, &num2) != EOF){
 		list1[lines_count] = num1;
