@@ -20,7 +20,7 @@ func main() {
 	list1 := make([]int, 0, 1000)
 	list2 := make([]int, 0, 1000)
 	for scanner.Scan() {
-		items := strings.Split(scanner.Text(), "   ")
+		items := strings.Fields(scanner.Text())
 		if i, err := strconv.Atoi(items[0]); err == nil {
 			list1 = append(list1, i)
 		}
