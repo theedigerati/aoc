@@ -35,7 +35,7 @@ void validate_level(int l1, int l2, int* diff_state, int* valid){
 	if (*diff_state ^ new_diff_state){
 		*valid = 0; return;
 	}
-	*valid = 1; return;
+	*valid = 1;
 }
 
 void validate(int levels[], int levels_len, int use_dampner, int* valid){
@@ -70,14 +70,15 @@ void validate(int levels[], int levels_len, int use_dampner, int* valid){
 		validate_level(l1, l2, &diff_state, valid);
 		if (*valid){
 			dampner = i; continue;
-		} else {
-			l1 = levels[i];
-			l2 = levels[i+2];
-			validate_level(l1, l2, &diff_state, valid);
-			if (*valid){
-				dampner = i+1; continue;
-			} else break; // atp, we've tried 2 dampners that failed.
 		}
+		l1 = levels[i];
+		l2 = levels[i+2];
+		validate_level(l1, l2, &diff_state, valid);
+		if (*valid){
+			dampner = i+1; continue;
+		}
+		break; // atp, we've tried 2 dampners that failed.
+
 	}
 }
 
@@ -109,15 +110,15 @@ int main(void){
 		validate(levels, levels_len, 0, &valid);
 		if (valid){
 			safe_reports += 1; continue;
-		} else validate(levels, levels_len, 1, &valid);
-
-		if (valid){
-			safe_reports_with_dampner += 1; continue;
-		} else {
-			reverse_arr(levels, levels_len);
-			validate(levels, levels_len, 1, &valid);
 		}
 
+		validate(levels, levels_len, 1, &valid);
+		if (valid){
+			safe_reports_with_dampner += 1; continue;
+		}
+
+		reverse_arr(levels, levels_len);
+		validate(levels, levels_len, 1, &valid);
 		if (valid) safe_reports_with_dampner += 1;
 	}
 
