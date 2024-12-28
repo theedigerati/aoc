@@ -1,9 +1,3 @@
-/*
-* This solution uses an ARRAY as the data structure
-* for report validation and implements validation with
-* dampner without brute-force.
-*/
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
