@@ -5,76 +5,87 @@
 #define LINE_BUFFER_SIZE 30
 #define LEVELS_ARRAY_SIZE 8
 
-void reverse_arr(int arr[], int len){
-	for(int i=0; i < len; i++){
-		int tail = len-i-1;
+enum ProgState {
+	PROG_DECR = -1,
+	PROG_NULL,
+	PROG_INCR
+};
+
+struct Report {
+	int *levels;
+	int levels_len;
+	int valid;
+	enum ProgState progression;
+};
+
+void reverse_levels(struct Report *r){
+	for(int i=0; i < r->levels_len; i++){
+		int tail = r->levels_len - i - 1;
 		if (i > tail) break;
-		int temp = arr[i];
-		arr[i] = arr[tail];
-		arr[tail] = temp;
+		int temp = r->levels[i];
+		r->levels[i] = r->levels[tail];
+		r->levels[tail] = temp;
 	}
 }
 
-void validate_level(int l1, int l2, int* diff_state, int* valid){
+void validate_level(struct Report *r, int l1, int l2){
 	int diff = abs(l1 - l2);
 	if (diff < 1 || diff > 3){
-		*valid = 0; return;
+		r->valid = 0; return;
 	}
 
-	int new_diff_state;
+	enum ProgState new_prog_state = PROG_NULL;
 	if (l1 > l2){
-		new_diff_state = 1;
+		new_prog_state = PROG_INCR;
 	} else {
-		new_diff_state = -1;
+		new_prog_state = PROG_DECR;
 	}
 
-	if (*diff_state == 0){
-		*diff_state = new_diff_state;
-		*valid = 1; return;
+	if (r->progression == PROG_NULL){
+		r->progression = new_prog_state;
+		r->valid = 1; return;
 	}
-	if (*diff_state ^ new_diff_state){
-		*valid = 0; return;
+	if (r->progression ^ new_prog_state){
+		r->valid = 0; return;
 	}
-	*valid = 1;
+	r->valid = 1;
 }
 
-void validate(int levels[], int levels_len, int use_dampner, int* valid){
-	int diff_state = 0;
+void validate(struct Report *r, int use_dampner){
 	int dampner = -1;
 
-	for (int i = 0; i<levels_len; i++){
-		if (i + 1 == levels_len){
-			*valid = 1; break;
+	for (int i = 0; i < r->levels_len; i++){
+		if (i + 1 == r->levels_len){
+			r->valid = 1; break;
 		}
 		if (i == dampner) continue;
 
-		int l1 = levels[i];
-		int l2 = levels[i+1];
+		int l1 = r->levels[i];
+		int l2 = r->levels[i+1];
 
-		validate_level(l1, l2, &diff_state, valid);
-		if (*valid) continue;
-		if (!use_dampner) break;
-		if (dampner >= 0 ) break;
+		validate_level(r, l1, l2);
+		if (r->valid) continue;
+		if (!use_dampner || dampner >= 0) break;
 		if (i == 0){
 			dampner = i; continue;
 			// the way we deal with the first level
 			// is to revalidate the entire report in reverse.
 		}
-		if (i+2 == levels_len){ // out of bounds
+		if (i+2 == r->levels_len){ // out of bounds
 			dampner = i+1; continue;
 		}
 
 		// default recovery
-		l1 = levels[i-1];
-		l2 = levels[i+1];
-		validate_level(l1, l2, &diff_state, valid);
-		if (*valid){
+		l1 = r->levels[i-1];
+		l2 = r->levels[i+1];
+		validate_level(r, l1, l2);
+		if (r->valid){
 			dampner = i; continue;
 		}
-		l1 = levels[i];
-		l2 = levels[i+2];
-		validate_level(l1, l2, &diff_state, valid);
-		if (*valid){
+		l1 = r->levels[i];
+		l2 = r->levels[i+2];
+		validate_level(r, l1, l2);
+		if (r->valid){
 			dampner = i+1; continue;
 		}
 		break; // atp, we've tried 2 dampners that failed.
@@ -106,20 +117,20 @@ int main(void){
 			levels_len++;
 		}
 
-		int valid = 0;
-		validate(levels, levels_len, 0, &valid);
-		if (valid){
+		struct Report r = {.levels=levels, .levels_len=levels_len, .progression=PROG_NULL};
+		validate(&r, 0);
+		if (r.valid){
 			safe_reports += 1; continue;
 		}
 
-		validate(levels, levels_len, 1, &valid);
-		if (valid){
+		validate(&r, 1);
+		if (r.valid){
 			safe_reports_with_dampner += 1; continue;
 		}
 
-		reverse_arr(levels, levels_len);
-		validate(levels, levels_len, 1, &valid);
-		if (valid) safe_reports_with_dampner += 1;
+		reverse_levels(&r);
+		validate(&r, 1);
+		if (r.valid) safe_reports_with_dampner += 1;
 	}
 
 	printf("Total safe reports: %d\n", safe_reports);
