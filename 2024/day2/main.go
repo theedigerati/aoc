@@ -45,7 +45,7 @@ func (r *Report) validateLevel(l1, l2 int) {
 		return
 	}
 
-	if (r.progression ^ newProgState) < 0 {
+	if (r.progression ^ newProgState) != 0 {
 		r.valid = false
 		return
 	}
