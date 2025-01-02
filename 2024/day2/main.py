@@ -1,73 +1,91 @@
-def validate(levels, use_dampner=True):
-    diff_state = 0
-    dampner = None
+from enum import IntEnum
+
+
+class ProgState(IntEnum):
+    PROG_NIL = 0
+    PROG_INCR = 1
+    PROG_DECR = -1
+
+
+class Report:
+    levels = []
     valid = False
+    progression = ProgState.PROG_NIL
 
-    for i in range(len(levels)):
-        if i + 1 == len(levels):
-            valid = True
+    def __init__(self, levels) -> None:
+        self.levels = [int(level) for level in levels]
+
+    def validate(self, use_dampner=True):
+        dampner = None
+        levels_len = len(self.levels)
+
+        for i in range(levels_len):
+            if i + 1 == levels_len:
+                self.valid = True
+                break
+            if i == dampner:
+                continue
+            l1 = self.levels[i]
+            l2 = self.levels[i + 1]
+
+            self.validate_level(l1, l2)
+            if self.valid:
+                continue
+            elif use_dampner is False or dampner is not None:
+                break
+            elif i == 0:
+                dampner = i
+                continue
+            elif i + 2 == levels_len:  # out of bounds
+                dampner = i + 1
+                continue
+
+            # default recovery
+            l1 = self.levels[i - 1]
+            l2 = self.levels[i + 1]
+            self.validate_level(l1, l2)
+            if self.valid:
+                dampner = i
+                continue
+            l1 = self.levels[i]
+            l2 = self.levels[i + 2]
+            self.validate_level(l1, l2)
+            if self.valid:
+                dampner = i + 1
+                continue
+            # at this point we've tried 2 dampners that failed
             break
-        if i == dampner:
-            continue
-        a = int(levels[i])
-        b = int(levels[i + 1])
+        return self.valid
 
-        diff_state, valid = validate_level(diff_state, a, b)
-        if valid:
-            continue
-        elif use_dampner is False or dampner is not None:
-            break
-        elif i == 0:
-            dampner = i
-            continue
-        elif i + 2 == len(levels):  # out of bounds
-            dampner = i + 1
-            continue
-
-        # default recovery
-        a = int(levels[i - 1])
-        b = int(levels[i + 1])
-        _, valid = validate_level(diff_state, a, b)
-        if valid:
-            dampner = i
-            continue
-        a = int(levels[i])
-        b = int(levels[i + 2])
-        _, valid = validate_level(diff_state, a, b)
-        if valid:
-            dampner = i + 1
-            continue
-        # at this point we've tried 2 dampners that failed
-        break
-    return valid
-
-
-def validate_level(diff_state: int, a: int, b: int):
-    diff = abs(a - b)
-    if diff < 1 or diff > 3:
-        return diff_state, False
-    new_diff_state = 1 if a > b else -1
-    if diff_state == 0:
-        return new_diff_state, True
-    elif diff_state ^ new_diff_state:
-        return diff_state, False
-    return diff_state, True
+    def validate_level(self, l1: int, l2: int):
+        diff = abs(l1 - l2)
+        if diff < 1 or diff > 3:
+            self.valid = False
+            return
+        new_prog_state = ProgState.PROG_INCR if l1 > l2 else ProgState.PROG_DECR
+        if self.progression == ProgState.PROG_NIL:
+            self.progression = new_prog_state
+            self.valid = True
+        elif self.progression ^ new_prog_state:
+            self.valid = False
+        else:
+            self.valid = True
 
 
 safe_reports = 0
 safe_reports_with_dampner = 0
 with open("input.txt") as reports:
-    for report in reports:
-        levels = report.split()
-
-        if validate(levels, use_dampner=False):
+    for line in reports:
+        levels = line.split()
+        report = Report(levels=levels)
+        if report.validate(use_dampner=False):
             safe_reports += 1
             continue
-        if validate(levels):
+        if report.validate():
             safe_reports_with_dampner += 1
             continue
-        levels.reverse()
-        if validate(levels):
+        report.levels.reverse()
+        if report.validate():
             safe_reports_with_dampner += 1
 
 print("Total safe reports:", safe_reports)
